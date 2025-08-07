@@ -35,3 +35,14 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Application Properties (보안) ###
+src/main/resources/application.properties
+src/main/resources/application-*.properties
+.env
+
+### 기타 보안 파일 ###
+*.log
+*.tmp
+*.swp
+*~
