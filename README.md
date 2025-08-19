@@ -1,0 +1,76 @@
+# ToyProject
+
+Spring Boot를 이용한 토이 프로젝트입니다.
+
+## 개발 환경 설정
+
+### 필수 요구사항
+- Java 17+
+- PostgreSQL 13+
+- Git
+
+### 프로젝트 설정 방법
+
+1. **프로젝트 클론**
+   ```bash
+   git clone https://github.com/johnch94/ToyProject0806.git
+   cd ToyProject0806
+   ```
+
+2. **PostgreSQL 설정**
+   - PostgreSQL 설치 및 실행
+   - 데이터베이스 생성:
+     ```sql
+     CREATE DATABASE toyproject;
+     ```
+
+3. **애플리케이션 설정**
+   ```bash
+   # application-example.properties 파일을 복사
+   cp src/main/resources/application-example.properties src/main/resources/application.properties
+   
+   # application.properties 파일을 열어서 실제 DB 정보로 수정
+   ```
+
+4. **프로젝트 실행**
+   ```bash
+   ./gradlew bootRun
+   ```
+
+5. **브라우저에서 확인**
+   - http://localhost:8080
+
+## 기술 스택
+- Java 17
+- Spring Boot 3.5.4
+- Spring Data JPA
+- Spring Security
+- PostgreSQL 16
+- Gradle
+
+## 브랜치 전략
+- `main`: 메인 브랜치 (안정 버전)
+- `feature/기능명`: 개발 브랜치
+- `bugfix/버그명`: 버그 수정 브랜치
+
+## 협업 가이드
+
+1. **새 기능 개발**
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/새기능명
+   # 개발 작업
+   git add .
+   git commit -m "feat: 새 기능 설명"
+   git push origin feature/새기능명
+   ```
+
+2. **Pull Request**
+   - GitHub에서 PR 생성
+   - 코드 리뷰 후 merge
+
+## 보안 주의사항
+- `application.properties` 파일은 Git에 포함되지 않습니다
+- 개인별로 `application-example.properties`를 복사해서 사용하세요
+- 실제 DB 비밀번호 등은 절대 공유하지 마세요

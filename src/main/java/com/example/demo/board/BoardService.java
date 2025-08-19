@@ -1,7 +1,7 @@
 package com.example.demo.board;
 
 import com.example.demo.board.dto.*;
-import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.user.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -56,11 +56,13 @@ public class BoardService {
         if (boardRepository.existsByTitle(request.getTitle())) {
             throw new DuplicateTitleException("이미 존재하는 제목입니다: " + request.getTitle());
         }
+
+        UserEntity author = new UserEntity();
         
         BoardEntity board = BoardEntity.createBoard(
             request.getTitle(),
             request.getContent(),
-            request.getAuthor()
+            author
         );
         
         BoardEntity savedBoard = boardRepository.save(board);

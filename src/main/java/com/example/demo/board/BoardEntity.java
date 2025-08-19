@@ -1,5 +1,6 @@
 package com.example.demo.board;
 
+import com.example.demo.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,9 +27,10 @@ public class BoardEntity {
     
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
-    
-    @Column(name = "author", nullable = false, length = 50)
-    private String author;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity author;
     
     @Column(name = "view_count")
     @Builder.Default
@@ -41,7 +43,7 @@ public class BoardEntity {
     @UpdateTimestamp
     @Column(name = "updated_date")
     private LocalDateTime updatedDate;
-    
+
     public void incrementViewCount() {
         this.viewCount++;
     }
@@ -55,7 +57,7 @@ public class BoardEntity {
     }
     
     // 정적 팩토리 메서드
-    public static BoardEntity createBoard(String title, String content, String author) {
+    public static BoardEntity createBoard(String title, String content, UserEntity author) {
         return BoardEntity.builder()
                 .title(title)
                 .content(content)

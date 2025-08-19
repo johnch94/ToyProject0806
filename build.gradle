@@ -29,12 +29,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation' // @Valid, @NotBlank 등 검증 어노테이션
 	
-	// 보안 (기존에 있던 것 유지)
+	// 보안
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	
 	// 데이터베이스
 	runtimeOnly 'org.postgresql:postgresql'
-	runtimeOnly 'com.h2database:h2' // 개발/테스트용 H2 DB 추가
+	runtimeOnly 'com.h2database:h2' // 개발/테스트용 H2 DB
 	
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
@@ -49,15 +49,12 @@ dependencies {
 	// Hibernate (Timestamp 어노테이션 지원)
 	implementation 'org.hibernate.orm:hibernate-core'
 	
-	// JSON 처리 (이미 spring-boot-starter-web에 포함되지만 명시적 추가)
+	// JSON 처리
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // LocalDateTime 지원
 	
 	// API 문서화 (Swagger/OpenAPI)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-	
-	// 로깅 (SLF4J - 이미 Spring Boot에 포함되지만 명시적 추가)
-	implementation 'org.slf4j:slf4j-api'
 	
 	// 개발 도구
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
