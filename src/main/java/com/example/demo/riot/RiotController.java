@@ -55,4 +55,18 @@ public class RiotController {
         result.put("firstMatchDetail", matchIds.isEmpty() ? null : riotService.getMatchDetail(matchIds.get(0)));
         return result;
     }
+
+    // (선택) 소환사명 → Riot ID(gameName/tagLine) 확인
+    @GetMapping("/riot/resolve-riot-id")
+    public Map<String, Object> resolveRiotId(
+            @RequestParam(defaultValue = "kr") String platform,
+            @RequestParam String summonerName
+    ) {
+        String puuid = riotService.getPuuidBySummonerName(platform, summonerName);
+        Map acc = riotService.getAccountByPuuid(puuid);
+        return Map.of(
+                "puuid", puuid,
+                "riotId", Map.of("gameName", acc.get("gameName"), "tagLine", acc.get("tagLine"))
+        );
+    }
 }

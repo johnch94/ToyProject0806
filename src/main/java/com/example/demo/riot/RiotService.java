@@ -56,7 +56,7 @@ public class RiotService {
         String n = URLEncoder.encode(summonerName, StandardCharsets.UTF_8);
         String url = "https://" + platform + ".api.riotgames.com/lol/summoner/v4/summoners/by-name/" + n;
         try {
-            Map body = rt.getForObject(url, Map.class);
+            Map body = rt.getForObject(url, java.util.Map.class);
             if (body == null || body.get("puuid") == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "소환사를 찾지 못했습니다.");
             }
@@ -65,6 +65,12 @@ public class RiotService {
             throw new ResponseStatusException(e.getStatusCode(),
                     "Riot API 오류: " + e.getStatusText() + " / " + e.getResponseBodyAsString());
         }
+    }
+
+    // RiotService.java
+    public Map getAccountByPuuid(String puuid) {
+        String url = "https://" + route + ".api.riotgames.com/riot/account/v1/accounts/by-puuid/" + puuid;
+        return rt.getForObject(url, Map.class); // { puuid, gameName, tagLine }
     }
 }
 
