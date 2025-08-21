@@ -25,7 +25,7 @@ public class BoardResponse {
                 .boardId(entity.getBoardId())
                 .title(entity.getTitle())
                 .content(entity.getContent())
-                .author(entity.getAuthor())
+                .author(entity.getAuthor() != null ? entity.getAuthor().getUsername() : "익명")
                 .viewCount(entity.getViewCount())
                 .createdDate(entity.getCreatedDate())
                 .updatedDate(entity.getUpdatedDate())

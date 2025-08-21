@@ -57,9 +57,10 @@ public class BoardController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<BoardResponse>> createBoard(
-            @Valid @RequestBody BoardCreateRequest request) {
+            @Valid @RequestBody BoardCreateRequest request,
+            @RequestParam Long authorId) {
         
-        BoardResponse createdBoard = boardService.createBoard(request);
+        BoardResponse createdBoard = boardService.createBoard(request, authorId);
         
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.success("게시글 생성 성공", createdBoard));

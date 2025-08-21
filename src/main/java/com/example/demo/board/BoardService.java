@@ -2,6 +2,7 @@ package com.example.demo.board;
 
 import com.example.demo.board.dto.*;
 import com.example.demo.user.UserEntity;
+import com.example.demo.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class BoardService {
     
     private final BoardRepository boardRepository;
+    private final UserRepository userRepository;
     
     /**
      * 게시글 전체 조회 (페이징)
@@ -51,13 +53,15 @@ public class BoardService {
      * 게시글 생성
      */
     @Transactional
-    public BoardResponse createBoard(BoardCreateRequest request) {
+    public BoardResponse createBoard(BoardCreateRequest request, Long authorId) {
         // 제목 중복 체크
         if (boardRepository.existsByTitle(request.getTitle())) {
             throw new DuplicateTitleException("이미 존재하는 제목입니다: " + request.getTitle());
         }
 
-        UserEntity author = new UserEntity();
+        // 실제 사용자 조회
+        UserEntity author = userRepository.findById(authorId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + authorId));
         
         BoardEntity board = BoardEntity.createBoard(
             request.getTitle(),
@@ -66,7 +70,8 @@ public class BoardService {
         );
         
         BoardEntity savedBoard = boardRepository.save(board);
-        log.info("게시글 생성 완료 - ID: {}, 제목: {}", savedBoard.getBoardId(), savedBoard.getTitle());
+        log.info("게시글 생성 완료 - ID: {}, 제목: {}, 작성자: {}", 
+                savedBoard.getBoardId(), savedBoard.getTitle(), savedBoard.getAuthor().getUsername());
         
         return BoardResponse.fromEntity(savedBoard);
     }
@@ -80,7 +85,7 @@ public class BoardService {
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID: " + boardId));
         
         // 작성자 확인
-        if (!board.getAuthor().equals(request.getAuthor())) {
+        if (!board.getAuthor().getUsername().equals(request.getAuthor())) {
             throw new UnauthorizedAccessException("게시글 수정 권한이 없습니다.");
         }
         
@@ -100,7 +105,7 @@ public class BoardService {
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID: " + boardId));
         
         // 작성자 확인
-        if (!board.getAuthor().equals(author)) {
+        if (!board.getAuthor().getUsername().equals(author)) {
             throw new UnauthorizedAccessException("게시글 삭제 권한이 없습니다.");
         }
         
@@ -122,7 +127,7 @@ public class BoardService {
      */
     public Page<BoardResponse> getBoardsByAuthor(String author, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return boardRepository.findByAuthorOrderByCreatedDateDesc(author, pageable)
+        return boardRepository.findByAuthorUsernameOrderByCreatedDateDesc(author, pageable)
                 .map(BoardResponse::fromEntity);
     }
     
@@ -150,8 +155,8 @@ public class BoardService {
      * 작성자 통계 조회
      */
     public AuthorStatsResponse getAuthorStats(String author) {
-        long totalPosts = boardRepository.countByAuthor(author);
-        List<BoardEntity> recentPosts = boardRepository.findByAuthor(author);
+        long totalPosts = boardRepository.countByAuthorUsername(author);
+        List<BoardEntity> recentPosts = boardRepository.findByAuthorUsername(author);
         
         return AuthorStatsResponse.builder()
                 .author(author)
@@ -199,6 +204,12 @@ public class BoardService {
     
     public static class UnauthorizedAccessException extends RuntimeException {
         public UnauthorizedAccessException(String message) {
+            super(message);
+        }
+    }
+    
+    public static class UserNotFoundException extends RuntimeException {
+        public UserNotFoundException(String message) {
             super(message);
         }
     }

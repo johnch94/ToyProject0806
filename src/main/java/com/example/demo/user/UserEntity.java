@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"password", "boards"})
+@ToString(exclude = {"password"})
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,4 +41,13 @@ public class UserEntity {
     @UpdateTimestamp
     @Column(name = "updated_date")
     private LocalDateTime updatedDate;
+    
+    // 비즈니스 메서드들
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+    
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }
