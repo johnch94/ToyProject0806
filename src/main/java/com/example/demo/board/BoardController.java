@@ -56,11 +56,9 @@ public class BoardController {
      * POST /api/boards
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<BoardResponse>> createBoard(
-            @Valid @RequestBody BoardCreateRequest request,
-            @RequestParam Long authorId) {
+    public ResponseEntity<ApiResponse<BoardResponse>> createBoard(@Valid @RequestBody BoardCreateRequest request) {
         
-        BoardResponse createdBoard = boardService.createBoard(request, authorId);
+        BoardResponse createdBoard = boardService.createBoard(request);
         
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.success("게시글 생성 성공", createdBoard));
@@ -71,8 +69,7 @@ public class BoardController {
      * PUT /api/boards/{boardId}
      */
     @PutMapping("/{boardId}")
-    public ResponseEntity<ApiResponse<BoardResponse>> updateBoard(
-            @PathVariable Long boardId,
+    public ResponseEntity<ApiResponse<BoardResponse>> updateBoard(@PathVariable Long boardId,
             @Valid @RequestBody BoardUpdateRequest request) {
         
         BoardResponse updatedBoard = boardService.updateBoard(boardId, request);
