@@ -2,6 +2,8 @@ package com.example.demo.board;
 
 import com.example.demo.board.dto.*;
 import com.example.demo.user.UserEntity;
+import com.example.demo.user.UserService;
+import com.example.demo.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,7 +24,8 @@ import java.util.stream.Collectors;
 public class BoardService {
     
     private final BoardRepository boardRepository;
-    
+    private UserService userService;
+
     /**
      * 게시글 전체 조회 (페이징)
      */
@@ -57,7 +60,7 @@ public class BoardService {
             throw new DuplicateTitleException("이미 존재하는 제목입니다: " + request.getTitle());
         }
 
-        UserEntity author = new UserEntity();
+        UserEntity author = userService.getAuthorByUsername(request.getAuthor());
         
         BoardEntity board = BoardEntity.createBoard(
             request.getTitle(),

@@ -17,7 +17,8 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
     List<BoardEntity> findByTitleContaining(String title);
     
     // 2. 작성자로 검색
-    List<BoardEntity> findByAuthor(String author);
+    @Query("SELECT b FROM BoardEntity b WHERE b.author.username = :username")
+    List<BoardEntity> findByAuthor(@Param("username") String author);
     
     // 3. 제목 또는 내용으로 검색 (페이징)
     Page<BoardEntity> findByTitleContainingOrContentContaining(
@@ -39,8 +40,9 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
     boolean existsByTitle(String title);
     
     // 9. 작성자의 게시글 수 조회
+    @Query("SELECT COUNT(1) FROM BoardEntity b WHERE b.author.username = :username")
     long countByAuthor(String author);
-    
+
     // 10. 커스텀 쿼리 - 조회수 업데이트
     @Modifying
     @Query("UPDATE BoardEntity b SET b.viewCount = b.viewCount + 1 WHERE b.boardId = :boardId")
@@ -50,10 +52,10 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
     @Query("SELECT b FROM BoardEntity b WHERE " +
            "b.title LIKE %:keyword% OR " +
            "b.content LIKE %:keyword% OR " +
-           "b.author LIKE %:keyword% " +
+           "b.author.username LIKE %:keyword% " +
            "ORDER BY b.createdDate DESC")
     Page<BoardEntity> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
-    
+
     // 12. 네이티브 쿼리 예시 - 월별 게시글 통계
     @Query(value = "SELECT DATE_FORMAT(created_date, '%Y-%m') as month, COUNT(*) as count " +
                    "FROM boards " +
@@ -69,6 +71,4 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
     // 14. 특정 조회수 이상인 게시글
     List<BoardEntity> findByViewCountGreaterThanEqual(Integer viewCount);
     
-    // 15. Optional을 사용한 안전한 조회
-    Optional<BoardEntity> findByBoardIdAndAuthor(Long boardId, String author);
 }
