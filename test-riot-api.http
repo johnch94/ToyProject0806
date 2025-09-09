@@ -1,0 +1,30 @@
+### Riot API 테스트 (IntelliJ HTTP Client)
+### 사용법: 각 요청 옆 ▶️ 버튼 클릭
+
+### 1. 헬스체크 (서버 상태 확인)
+GET http://localhost:8081/actuator/health
+
+### 2. 플레이어 검색 (Faker)
+GET http://localhost:8081/api/riot/player?gameName=Faker&tagLine=KR1
+Content-Type: application/json
+
+### 3. 간단한 플레이어 정보
+GET http://localhost:8081/api/riot/player/simple?gameName=Hide on bush&tagLine=KR1
+Content-Type: application/json
+
+### 4. 존재하지 않는 플레이어 (에러 처리 확인)
+GET http://localhost:8081/api/riot/player?gameName=NonExistentPlayer&tagLine=TEST
+Content-Type: application/json
+
+### 5. 최근 경기 목록 (PUUID 필요 - 위 응답에서 복사)
+GET http://localhost:8081/api/riot/matches?puuid=여기에_실제_PUUID_입력&count=5
+Content-Type: application/json
+
+### 6. Swagger UI 접속 (브라우저에서)
+# http://localhost:8081/swagger-ui.html
+
+### 7. H2 데이터베이스 콘솔 (브라우저에서)  
+# http://localhost:8081/h2-console
+# JDBC URL: jdbc:h2:mem:testdb
+# User Name: sa
+# Password: (비워둠)

@@ -13,5 +13,5 @@ public class PlayerSummaryResponse {
     private SummonerResponse summoner;
     private List<RankResponse> ranks;
     private List<String> recentMatchIds;
-    private List<ChampionMasteryResponse> topChampions;
+    // topChampions 제거 - 토이프로젝트에서는 복잡도 감소를 위해 제외
 }

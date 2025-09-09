@@ -46,3 +46,7 @@ src/main/resources/application-*.properties
 *.tmp
 *.swp
 *~
+
+### 임시 백업 파일 (삭제 예정) ###
+backup_to_delete/
+*.backup

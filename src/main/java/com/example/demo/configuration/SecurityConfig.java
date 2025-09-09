@@ -34,8 +34,10 @@ public class SecurityConfig {
                 // 인증 없이 접근 가능한 경로
                 .requestMatchers("/api/auth/**").permitAll()           // 인증 관련 API
                 .requestMatchers("/api/boards/**").permitAll()        // 게시글 조회 (임시)
+                .requestMatchers("/api/riot/**").permitAll()          // Riot API (외부 API 연동)
                 .requestMatchers("/api/users/check/**").permitAll()   // 중복 확인
                 .requestMatchers("/h2-console/**").permitAll()        // H2 콘솔 (개발용)
+                .requestMatchers("/api/health/**").permitAll()        // 헬스체크 (새로운 경로)
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()  // Swagger
                 // 관리자만 접근 가능
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
