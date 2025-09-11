@@ -32,9 +32,6 @@ public class RiotApiService {
 
     private final RestTemplate riotRestTemplate;
 
-    @Value("${riot.mock-mode:false}")
-    private boolean mockMode;
-
     @Value("${riot.platform-route}")
     private String regionalRoute; // asia, americas, europe
 
@@ -53,16 +50,6 @@ public class RiotApiService {
      * - 외부 API 호출 패턴
      */
     public AccountResponse getAccountByRiotId(String gameName, String tagLine) {
-        // Mock 모드: 개발용 가짜 데이터 반환
-        if (mockMode) {
-            log.info("Mock 모드: 가짜 Account 데이터 반환 - {}#{}", gameName, tagLine);
-            return AccountResponse.builder()
-                    .puuid("MOCK_PUUID_" + gameName)
-                    .gameName(gameName)
-                    .tagLine(tagLine)
-                    .build();
-        }
-        
         // 실제 API 호출
         String encodedGameName = URLEncoder.encode(gameName, StandardCharsets.UTF_8);
         String encodedTagLine = URLEncoder.encode(tagLine, StandardCharsets.UTF_8);
@@ -91,20 +78,6 @@ public class RiotApiService {
      * 🎯 핵심 #2: 소환사 정보 조회
      */
     public SummonerResponse getSummonerByPuuid(String platform, String puuid) {
-        // Mock 모드: 개발용 가짜 데이터
-        if (mockMode) {
-            log.info("Mock 모드: 가짜 Summoner 데이터 반환 - PUUID={}", puuid);
-            return SummonerResponse.builder()
-                    .id("MOCK_SUMMONER_ID")
-                    .accountId("MOCK_ACCOUNT_ID")
-                    .puuid(puuid)
-                    .name("Mock Player")
-                    .profileIconId(123)
-                    .revisionDate(System.currentTimeMillis())
-                    .summonerLevel(300)
-                    .build();
-        }
-        
         // 실제 API 호출
         String platformCode = PLATFORM_MAPPING.getOrDefault(platform.toLowerCase(), platform);
         String url = String.format("https://%s.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/%s",
@@ -114,14 +87,17 @@ public class RiotApiService {
             log.info("Summoner API 호출: PUUID={}", puuid);
             Map<String, Object> response = riotRestTemplate.getForObject(url, Map.class);
             
+            // 응답 로그 추가
+            log.info("Summoner API 응답: {}", response);
+            
             return SummonerResponse.builder()
-                    .id(response.get("id").toString())
-                    .accountId(response.get("accountId").toString())
-                    .puuid(response.get("puuid").toString())
-                    .name(response.get("name").toString())
-                    .profileIconId(((Number) response.get("profileIconId")).intValue())
-                    .revisionDate(((Number) response.get("revisionDate")).longValue())
-                    .summonerLevel(((Number) response.get("summonerLevel")).intValue())
+                    .id(response.get("id") != null ? response.get("id").toString() : "UNKNOWN")
+                    .accountId(response.get("accountId") != null ? response.get("accountId").toString() : "UNKNOWN")
+                    .puuid(response.get("puuid") != null ? response.get("puuid").toString() : "UNKNOWN")
+                    .name(response.get("name") != null ? response.get("name").toString() : "UNKNOWN")
+                    .profileIconId(response.get("profileIconId") != null ? ((Number) response.get("profileIconId")).intValue() : 0)
+                    .revisionDate(response.get("revisionDate") != null ? ((Number) response.get("revisionDate")).longValue() : 0L)
+                    .summonerLevel(response.get("summonerLevel") != null ? ((Number) response.get("summonerLevel")).intValue() : 0)
                     .build();
                     
         } catch (HttpClientErrorException e) {
@@ -138,29 +114,6 @@ public class RiotApiService {
      * - 언랭크 처리
      */
     public List<RankResponse> getRankInfo(String platform, String summonerId) {
-        // Mock 모드: 개발용 가짜 랭크 데이터
-        if (mockMode) {
-            log.info("Mock 모드: 가짜 랭크 데이터 반환 - SummonerID={}", summonerId);
-            return List.of(
-                    RankResponse.builder()
-                            .queueType("RANKED_SOLO_5x5")
-                            .tier("CHALLENGER")
-                            .rank("I")
-                            .leaguePoints(1337)
-                            .wins(150)
-                            .losses(50)
-                            .build(),
-                    RankResponse.builder()
-                            .queueType("RANKED_FLEX_SR")
-                            .tier("DIAMOND")
-                            .rank("II")
-                            .leaguePoints(67)
-                            .wins(80)
-                            .losses(45)
-                            .build()
-            );
-        }
-        
         // 실제 API 호출
         String platformCode = PLATFORM_MAPPING.getOrDefault(platform.toLowerCase(), platform);
         String url = String.format("https://%s.api.riotgames.com/lol/league/v4/entries/by-summoner/%s",
@@ -198,18 +151,6 @@ public class RiotApiService {
      * 🎯 핵심 #4: 최근 경기 목록 조회
      */
     public List<String> getRecentMatchIds(String puuid, int count) {
-        // Mock 모드: 개발용 가짜 경기 ID 데이터
-        if (mockMode) {
-            log.info("Mock 모드: 가짜 경기 ID 데이터 반환 - PUUID={}, count={}", puuid, count);
-            return List.of(
-                    "KR_123456789_MOCK_MATCH_1",
-                    "KR_123456789_MOCK_MATCH_2", 
-                    "KR_123456789_MOCK_MATCH_3",
-                    "KR_123456789_MOCK_MATCH_4",
-                    "KR_123456789_MOCK_MATCH_5"
-            ).subList(0, Math.min(count, 5));
-        }
-        
         // 실제 API 호출
         String url = String.format("https://%s.api.riotgames.com/lol/match/v5/matches/by-puuid/%s/ids?start=0&count=%d",
                 regionalRoute, puuid, Math.min(count, 10)); // 토이프로젝트에서는 최대 10개
@@ -280,7 +221,6 @@ public class RiotApiService {
                     .summoner(summoner)
                     .ranks(ranks)
                     .recentMatchIds(recentMatches)
-                    // .topChampions() 제거됨 - DTO에서 필드 삭제
                     .build();
                     
         } catch (Exception e) {
@@ -289,16 +229,4 @@ public class RiotApiService {
                     "플레이어 정보를 가져오는 중 오류가 발생했습니다");
         }
     }
-
-    /*
-     * 🗑️ 제거된 메서드들 (토이프로젝트에는 과함):
-     * - getChampionMastery(): 챔피언 숙련도 상세 분석
-     * - 복잡한 매치 통계 분석
-     * - 다중 지역 지원 확장
-     * 
-     * 💡 학습 완료 후 추가 고려사항:
-     * - Redis 캐싱 적용
-     * - Rate Limit 관리
-     * - Circuit Breaker 패턴
-     */
 }

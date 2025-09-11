@@ -27,11 +27,55 @@ public class RiotController {
     private final RiotApiService riotApiService;
 
     /**
+     * 🔧 Summoner API만 테스트
+     */
+    @GetMapping("/test/summoner")
+    public ApiResponse<SummonerResponse> testSummoner(
+            @RequestParam String puuid,
+            @RequestParam(defaultValue = "kr") String platform) {
+        
+        try {
+            SummonerResponse summoner = riotApiService.getSummonerByPuuid(platform, puuid);
+            return ApiResponse.<SummonerResponse>builder()
+                    .success(true)
+                    .message("Summoner API 성공")
+                    .data(summoner)
+                    .build();
+        } catch (Exception e) {
+            return ApiResponse.<SummonerResponse>builder()
+                    .success(false)
+                    .message("에러: " + e.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    /**
+     * 🔧 Account API만 테스트
+     */
+    @GetMapping("/test/account")
+    public ApiResponse<AccountResponse> testAccount(
+            @RequestParam String gameName,
+            @RequestParam String tagLine) {
+        
+        try {
+            AccountResponse account = riotApiService.getAccountByRiotId(gameName, tagLine);
+            return ApiResponse.<AccountResponse>builder()
+                    .success(true)
+                    .message("Account API 성공")
+                    .data(account)
+                    .build();
+        } catch (Exception e) {
+            return ApiResponse.<AccountResponse>builder()
+                    .success(false)
+                    .message("에러: " + e.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    /**
      * 🎯 MVP #1: 플레이어 검색 (가장 중요)
-     * 
-     * 사용법: /api/riot/player?gameName=Faker&tagLine=KR1
-     * 
-     * 왜 이 API가 중요한가?
      * - 롤 유저들이 가장 많이 사용하는 기능
      * - 한 번의 호출로 모든 기본 정보 제공
      * - 프론트엔드 개발 편의성 극대화
