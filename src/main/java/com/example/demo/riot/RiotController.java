@@ -27,6 +27,29 @@ public class RiotController {
     private final RiotApiService riotApiService;
 
     /**
+     * 🔧 소환사명으로 직접 검색 테스트 (deprecated API)
+     */
+    @GetMapping("/test/by-name")
+    public ApiResponse<SummonerResponse> testByName(
+            @RequestParam String summonerName) {
+        
+        try {
+            SummonerResponse summoner = riotApiService.getSummonerByName(summonerName);
+            return ApiResponse.<SummonerResponse>builder()
+                    .success(true)
+                    .message("소환사명 API 성공")
+                    .data(summoner)
+                    .build();
+        } catch (Exception e) {
+            return ApiResponse.<SummonerResponse>builder()
+                    .success(false)
+                    .message("에러: " + e.getMessage())
+                    .data(null)
+                    .build();
+        }
+    }
+
+    /**
      * 🔧 Summoner API만 테스트
      */
     @GetMapping("/test/summoner")
@@ -117,12 +140,15 @@ public class RiotController {
         // 핵심 정보만 조회
         AccountResponse account = riotApiService.getAccountByRiotId(gameName, tagLine);
         SummonerResponse summoner = riotApiService.getSummonerByPuuid(platform, account.getPuuid());
-        List<RankResponse> ranks = riotApiService.getRankInfo(platform, summoner.getId());
+        List<RankResponse> ranks =
+                (summoner.getId() != null && !"UNKNOWN".equals(summoner.getId()))
+                        ? riotApiService.getRankInfo(platform, summoner.getId())
+                        : List.of();
         
         SimplePlayerResponse simple = SimplePlayerResponse.builder()
                 .gameName(account.getGameName())
                 .tagLine(account.getTagLine())
-                .summonerName(summoner.getName())
+                .summonerName(account.getGameName() + "#" + account.getTagLine()) // gameName#tagLine 형식
                 .summonerLevel(summoner.getSummonerLevel())
                 .profileIconId(summoner.getProfileIconId())
                 .soloRank(ranks.stream()
