@@ -9,6 +9,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 인증 컨트롤러 (토이프로젝트 버전)
+ * 
+ * MVP 수준: 회원가입, 로그인, 중복확인만 구현
+ * 기존 네이밍 규칙 유지: ~Controller, ~Request, ~Response
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -17,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     
     private final AuthService authService;
-    
+
     /**
      * 회원가입
      * POST /api/auth/signup
@@ -28,7 +34,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("회원가입 성공", user));
     }
-    
+
     /**
      * 로그인
      * POST /api/auth/login
@@ -38,18 +44,18 @@ public class AuthController {
         LoginResponse loginResponse = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success("로그인 성공", loginResponse));
     }
-    
+
     /**
      * 로그아웃
      * POST /api/auth/logout
+     * 
+     * JWT는 클라이언트에서 토큰 삭제로 처리 (서버는 상태 유지 안함)
      */
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
-        // TODO: JWT 토큰 무효화 (추후 구현)
-        log.info("로그아웃 요청");
         return ResponseEntity.ok(ApiResponse.success("로그아웃 성공", null));
     }
-    
+
     /**
      * 사용자명 중복 확인
      * GET /api/auth/check/username/{username}
@@ -60,7 +66,7 @@ public class AuthController {
         String message = available ? "사용 가능한 사용자명" : "이미 사용 중인 사용자명";
         return ResponseEntity.ok(ApiResponse.success(message, available));
     }
-    
+
     /**
      * 이메일 중복 확인
      * GET /api/auth/check/email/{email}
@@ -71,7 +77,7 @@ public class AuthController {
         String message = available ? "사용 가능한 이메일" : "이미 사용 중인 이메일";
         return ResponseEntity.ok(ApiResponse.success(message, available));
     }
-    
+
     /**
      * 헬스 체크
      * GET /api/auth/health
