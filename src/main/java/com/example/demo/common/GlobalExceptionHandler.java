@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -84,11 +85,37 @@ public class GlobalExceptionHandler {
     }
     
     /**
-     * 일반적인 예외 처리
+     * Static Resource 관련 예외는 로그 레벨을 낮춤 (favicon.ico 등)
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleNoResourceFoundException(
+            NoResourceFoundException ex, WebRequest request) {
+        
+        String resourcePath = ex.getResourcePath();
+        
+        // favicon이나 기타 정적 리소스는 DEBUG 레벨로만 로깅
+        if (resourcePath != null && 
+            (resourcePath.contains("favicon") || resourcePath.contains("."))) {
+            log.debug("정적 리소스 요청 실패: {}", resourcePath);
+        } else {
+            log.error("리소스를 찾을 수 없음: {}", resourcePath);
+        }
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("요청한 리소스를 찾을 수 없습니다"));
+    }
+    
+    /**
+     * 일반적인 예외 처리 (수정됨)
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleGlobalException(
             Exception ex, WebRequest request) {
+        
+        // NoResourceFoundException은 이미 위에서 처리되므로 여기서 제외
+        if (ex instanceof NoResourceFoundException) {
+            return handleNoResourceFoundException((NoResourceFoundException) ex, request);
+        }
         
         log.error("예상치 못한 오류 발생: ", ex);
         

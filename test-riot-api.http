@@ -1,30 +1,38 @@
-### Riot API 테스트 (IntelliJ HTTP Client)
+### Riot API 테스트 - 새로운 통합 전적 조회 API
 ### 사용법: 각 요청 옆 ▶️ 버튼 클릭
 
 ### 1. 헬스체크 (서버 상태 확인)
 GET http://localhost:8081/actuator/health
 
-### 2. 플레이어 검색 (Faker)
-GET http://localhost:8081/api/riot/player?gameName=Faker&tagLine=KR1
+### 2. 🎯 핵심 기능: Faker 전적 조회 (최근 3경기)
+GET http://localhost:8081/api/riot/player/Faker/KR1/matches?count=3
 Content-Type: application/json
 
-### 3. 간단한 플레이어 정보
-GET http://localhost:8081/api/riot/player/simple?gameName=Hide on bush&tagLine=KR1
+### 3. 🎯 핵심 기능: Hide on bush 전적 조회 (최근 5경기)
+GET http://localhost:8081/api/riot/player/Hide on bush/KR1/matches?count=5
 Content-Type: application/json
 
-### 4. 존재하지 않는 플레이어 (에러 처리 확인)
-GET http://localhost:8081/api/riot/player?gameName=NonExistentPlayer&tagLine=TEST
+### 4. 🎯 핵심 기능: 다른 플레이어 테스트 (최근 2경기)
+GET http://localhost:8081/api/riot/player/T1 Zeus/KR1/matches?count=2
 Content-Type: application/json
 
-### 5. 최근 경기 목록 (PUUID 필요 - 위 응답에서 복사)
-GET http://localhost:8081/api/riot/matches?puuid=여기에_실제_PUUID_입력&count=5
+### 5. 존재하지 않는 플레이어 (에러 처리 확인)
+GET http://localhost:8081/api/riot/player/NonExistentPlayer/TEST/matches?count=3
 Content-Type: application/json
 
-### 6. Swagger UI 접속 (브라우저에서)
-# http://localhost:8081/swagger-ui.html
+### 6. 최대 경기 수 제한 테스트 (10경기 초과 → 10경기로 제한)
+GET http://localhost:8081/api/riot/player/Faker/KR1/matches?count=20
+Content-Type: application/json
 
-### 7. H2 데이터베이스 콘솔 (브라우저에서)  
-# http://localhost:8081/h2-console
-# JDBC URL: jdbc:h2:mem:testdb
-# User Name: sa
-# Password: (비워둠)
+### 7. 기본값 테스트 (count 생략 → 5경기)
+GET http://localhost:8081/api/riot/player/Faker/KR1/matches
+Content-Type: application/json
+
+### 📊 응답 데이터 분석 포인트:
+### - player: 기본 플레이어 정보 (puuid, gameName, tagLine)
+### - matches: 경기별 상세 전적 (챔피언, 승부, KDA, CS, 딜량 등)
+### - stats: 통계 요약 (승률, 평균 KDA, 주력 챔피언 등)
+
+### 🔧 개발자 도구
+### Swagger UI: http://localhost:8081/swagger-ui.html
+### H2 Console: http://localhost:8081/h2-console (JDBC URL: jdbc:h2:mem:testdb, User: sa)
