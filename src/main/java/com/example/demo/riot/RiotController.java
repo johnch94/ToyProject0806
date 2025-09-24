@@ -1,72 +1,52 @@
 package com.example.demo.riot;
 
-import com.example.demo.riot.RiotService;
+import com.example.demo.common.dto.ApiResponse;
+import com.example.demo.riot.dto.PlayerMatchHistoryResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+/**
+ * 🎮 Riot API 컨트롤러 - 핵심 기능만
+ * 
+ * 단 1개 기능: 플레이어 전적 조회
+ * - 불필요한 테스트 엔드포인트 모두 제거
+ * - 중복 기능 모두 제거
+ * - 핵심만 남김
+ */
 @RestController
+@RequestMapping("/api/riot")
 @RequiredArgsConstructor
+@Slf4j
 public class RiotController {
 
-    private final RiotService riotService;
+    private final RiotApiService riotApiService;
 
-    // 예: /riot/matches?gameName=Faker&tagLine=KR1&count=3
-    @GetMapping("/riot/matches")
-    public Map<String, Object> getMatches(
-            @RequestParam String gameName,
-            @RequestParam String tagLine,
-            @RequestParam(defaultValue = "3") int count
-    ) {
-        String puuid = riotService.getPuuidByRiotId(gameName, tagLine);
-        List<String> matchIds = riotService.getMatchIds(puuid, 0, count);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("puuid", puuid);
-        result.put("matchIds", matchIds);
-        if (!matchIds.isEmpty()) {
-            result.put("firstMatchDetail", riotService.getMatchDetail(matchIds.get(0)));
-        }
-        return result;
-    }
-
-    @GetMapping("/riot/matches-by-summoner")
-    public Map<String, Object> getMatchesBySummoner(
-            @RequestParam(defaultValue = "kr") String platform, // KR 서버면 kr
-            @RequestParam String summonerName,
-            @RequestParam(defaultValue = "3") int count
-    ) {
-        // 1) 소환사명 → PUUID (플랫폼 라우트 사용)
-        String puuid = riotService.getPuuidBySummonerName(platform, summonerName);
-
-        // 2) PUUID → matchIds (리저널 라우트는 기존 properties의 riot.platform-route 사용: KR은 asia)
-        List<String> matchIds = riotService.getMatchIds(puuid, 0, count);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("platform", platform);
-        result.put("summonerName", summonerName);
-        result.put("puuid", puuid);
-        result.put("matchIds", matchIds);
-        result.put("firstMatchDetail", matchIds.isEmpty() ? null : riotService.getMatchDetail(matchIds.get(0)));
-        return result;
-    }
-
-    // (선택) 소환사명 → Riot ID(gameName/tagLine) 확인
-    @GetMapping("/riot/resolve-riot-id")
-    public Map<String, Object> resolveRiotId(
-            @RequestParam(defaultValue = "kr") String platform,
-            @RequestParam String summonerName
-    ) {
-        String puuid = riotService.getPuuidBySummonerName(platform, summonerName);
-        Map acc = riotService.getAccountByPuuid(puuid);
-        return Map.of(
-                "puuid", puuid,
-                "riotId", Map.of("gameName", acc.get("gameName"), "tagLine", acc.get("tagLine"))
-        );
+    /**
+     * 🎯 유일한 핵심 기능: 플레이어 전적 조회
+     * 
+     * 사용법: GET /api/riot/player/Faker/KR1/matches?count=5
+     * 
+     * 반환값:
+     * - 플레이어 기본 정보
+     * - 최근 N경기의 상세 전적 (승부, 챔피언, KDA, CS 등)
+     * - 통계 요약 (승률, 평균 KDA, 주력 챔피언)
+     */
+    @GetMapping("/player/{gameName}/{tagLine}/matches")
+    public ApiResponse<PlayerMatchHistoryResponse> getPlayerMatches(
+            @PathVariable String gameName,
+            @PathVariable String tagLine,
+            @RequestParam(defaultValue = "5") int count) {
+        
+        log.info("플레이어 전적 조회: {}#{}, {}경기", gameName, tagLine, count);
+        
+        PlayerMatchHistoryResponse matchHistory = riotApiService.getPlayerMatchHistory(
+                gameName, tagLine, Math.min(count, 10)); // 최대 10경기로 제한
+        
+        return ApiResponse.<PlayerMatchHistoryResponse>builder()
+                .success(true)
+                .message(String.format("%s#%s의 최근 %d경기 전적", gameName, tagLine, matchHistory.getMatches().size()))
+                .data(matchHistory)
+                .build();
     }
 }

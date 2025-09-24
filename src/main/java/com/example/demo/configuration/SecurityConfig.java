@@ -4,50 +4,38 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * 🔓 Spring Security 설정 - 테스트용 완전 개방
+ * 
+ * 모든 엔드포인트에 인증 없이 접근 가능하도록 설정
+ * 실제 운영에서는 보안 설정 필요!
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(authz -> authz
+                .anyRequest().permitAll()  // 모든 요청 허용
+            )
+            .csrf(csrf -> csrf.disable())  // CSRF 비활성화
+            .headers(headers -> headers.frameOptions().disable());  // H2 콘솔용
+            
+        return http.build();
+    }
     
     /**
-     * 비밀번호 암호화를 위한 PasswordEncoder Bean
+     * 🔐 PasswordEncoder Bean 등록
+     * AuthService에서 필요로 하는 의존성
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-    
-    /**
-     * Spring Security 설정
-     */
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())  // CSRF 비활성화
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // 세션 비활성화 (REST API)
-            .authorizeHttpRequests(auth -> auth
-                // 인증 없이 접근 가능한 경로
-                .requestMatchers("/api/auth/**").permitAll()           // 인증 관련 API
-                .requestMatchers("/api/boards/**").permitAll()        // 게시글 조회 (임시)
-                .requestMatchers("/api/users/check/**").permitAll()   // 중복 확인
-                .requestMatchers("/h2-console/**").permitAll()        // H2 콘솔 (개발용)
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()  // Swagger
-                // 관리자만 접근 가능
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
-                // 나머지 요청은 인증 필요
-                .anyRequest().authenticated()
-            )
-            // H2 콘솔을 위한 헤더 설정
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.sameOrigin())
-            );
-        
-        return http.build();
     }
 }

@@ -18,13 +18,7 @@ public class RiotRestTemplateConfig {
     public RestTemplate riotRestTemplate() {
         RestTemplate rt = new RestTemplate();
 
-        // 1) 인증 헤더: set + trim (공백/따옴표 등 보정)
-        ClientHttpRequestInterceptor auth = (req, body, exec) -> {
-            req.getHeaders().set("X-Riot-Token", apiKey == null ? "" : apiKey.trim());
-            return exec.execute(req, body);
-        };
-
-        // 2) 간단 로깅: 외부 호출/응답 코드 확인
+        // 로깅 인터셉터: 외부 호출/응답 코드 확인
         ClientHttpRequestInterceptor logging = (req, body, exec) -> {
             long t0 = System.currentTimeMillis();
             System.out.println("[RIOT OUT] " + req.getMethod() + " " + req.getURI());
@@ -33,8 +27,17 @@ public class RiotRestTemplateConfig {
             return resp;
         };
 
-        // 3) 인터셉터 등록 (auth → logging 순)
-        rt.setInterceptors(Arrays.asList(auth, logging));
+        // 로깅 인터셉터만 등록 (API 키는 Query Parameter로 직접 전달)
+        rt.setInterceptors(Arrays.asList(logging));
         return rt;
+    }
+    
+    /**
+     * API 키를 Query Parameter로 추가하는 헬퍼 메서드
+     */
+    public String addApiKeyToUrl(String baseUrl) {
+        String cleanApiKey = apiKey == null ? "" : apiKey.trim();
+        String separator = baseUrl.contains("?") ? "&" : "?";
+        return baseUrl + separator + "api_key=" + cleanApiKey;
     }
 }
