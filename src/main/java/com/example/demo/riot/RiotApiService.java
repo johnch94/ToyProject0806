@@ -21,12 +21,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 🎮 Riot API 서비스 - 핵심 기능만
+ * 🎮 Riot API 서비스
  * 
- * 3개 핵심 메서드:
- * 1. getPlayerMatchHistory() - 통합 전적 조회 (메인)
- * 2. getAccountByRiotId() - 플레이어 기본 정보
- * 3. getMatchDetail() - 경기별 상세 전적 (진짜 전적 데이터!)
+ * 4개 핵심 메서드:
+ * 1. getPlayerMatchHistory() - 통합 전적 조회 (검색 + 리스트)
+ * 2. getMatchDetailWithPlayer() - 단일 경기 상세 조회 (상세 페이지용) ⭐ 신규
+ * 3. getAccountByRiotId() - 플레이어 기본 정보
+ * 4. getMatchDetail() - 경기별 상세 전적 (내부 헬퍼)
  */
 @Service
 @RequiredArgsConstructor
@@ -77,6 +78,76 @@ public class RiotApiService {
             log.error("플레이어 전적 조회 실패: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, 
                     "전적을 가져오는 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🎯 신규 메서드: matchId + puuid로 단일 경기 상세 조회
+     * 
+     * 용도:
+     * - 프론트엔드에서 경기 클릭 시 상세 페이지 표시
+     * - URL로 직접 접근 가능
+     * - 새로고침해도 데이터 유지
+     * 
+     * 동작:
+     * 1. PUUID로 플레이어 정보 조회 (역조회는 불가능하므로 캐싱 필요)
+     * 2. matchId로 경기 상세 정보 조회
+     * 3. 플레이어 정보 + 경기 정보 통합 반환
+     */
+    public MatchDetailWithPlayerResponse getMatchDetailWithPlayer(String matchId, String puuid) {
+        try {
+            // 1. 경기 상세 정보 조회 (기존 로직 재사용)
+            MatchDetailResponse matchDetail = getMatchDetail(matchId, puuid);
+            
+            // 2. PUUID로 플레이어 정보 조회
+            AccountResponse account = getAccountByPuuid(puuid);
+            
+            // 3. 통합 DTO 생성
+            return MatchDetailWithPlayerResponse.builder()
+                    .puuid(account.getPuuid())
+                    .gameName(account.getGameName())
+                    .tagLine(account.getTagLine())
+                    .matchId(matchDetail.getMatchId())
+                    .gameDate(matchDetail.getGameDate())
+                    .gameLength(matchDetail.getGameLength())
+                    .queueType(matchDetail.getQueueType())
+                    .championName(matchDetail.getChampionName())
+                    .victory(matchDetail.isVictory())
+                    .kills(matchDetail.getKills())
+                    .deaths(matchDetail.getDeaths())
+                    .assists(matchDetail.getAssists())
+                    .cs(matchDetail.getCs())
+                    .totalDamage(matchDetail.getTotalDamage())
+                    .goldEarned(matchDetail.getGoldEarned())
+                    .build();
+                    
+        } catch (Exception e) {
+            log.error("경기 상세 조회 실패: matchId={}, puuid={}", matchId, puuid);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "경기 상세 정보를 가져올 수 없습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🔧 헬퍼: PUUID로 계정 정보 조회 (역조회)
+     */
+    private AccountResponse getAccountByPuuid(String puuid) {
+        String baseUrl = String.format("https://%s.api.riotgames.com/riot/account/v1/accounts/by-puuid/%s",
+                regionalRoute, puuid);
+        String url = riotConfig.addApiKeyToUrl(baseUrl);
+        
+        try {
+            Map<String, Object> response = riotRestTemplate.getForObject(url, Map.class);
+            
+            return AccountResponse.builder()
+                    .puuid(response.get("puuid").toString())
+                    .gameName(response.get("gameName").toString())
+                    .tagLine(response.get("tagLine").toString())
+                    .build();
+                    
+        } catch (HttpClientErrorException e) {
+            throw new ResponseStatusException(e.getStatusCode(),
+                    "플레이어 정보를 찾을 수 없습니다: " + puuid);
         }
     }
 
