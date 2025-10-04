@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -54,9 +56,18 @@ public class BoardController {
     /**
      * 게시글 생성
      * POST /api/boards
+     * JWT 토큰에서 작성자 정보를 자동으로 추출
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<BoardResponse>> createBoard(@Valid @RequestBody BoardCreateRequest request) {
+    public ResponseEntity<ApiResponse<BoardResponse>> createBoard(
+            @Valid @RequestBody BoardCreateRequest request) {
+        
+        // JWT 토큰에서 현재 로그인한 사용자명 추출
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        
+        // 요청 DTO에 작성자 정보 설정
+        request.setAuthor(currentUsername);
         
         BoardResponse createdBoard = boardService.createBoard(request);
         
@@ -69,8 +80,15 @@ public class BoardController {
      * PUT /api/boards/{boardId}
      */
     @PutMapping("/{boardId}")
-    public ResponseEntity<ApiResponse<BoardResponse>> updateBoard(@PathVariable Long boardId,
+    public ResponseEntity<ApiResponse<BoardResponse>> updateBoard(
+            @PathVariable Long boardId,
             @Valid @RequestBody BoardUpdateRequest request) {
+        
+        // JWT 토큰에서 현재 로그인한 사용자명 추출
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        
+        request.setAuthor(currentUsername);
         
         BoardResponse updatedBoard = boardService.updateBoard(boardId, request);
         
@@ -84,11 +102,13 @@ public class BoardController {
      * DELETE /api/boards/{boardId}
      */
     @DeleteMapping("/{boardId}")
-    public ResponseEntity<ApiResponse<Void>> deleteBoard(
-            @PathVariable Long boardId,
-            @RequestParam String author) {
+    public ResponseEntity<ApiResponse<Void>> deleteBoard(@PathVariable Long boardId) {
         
-        boardService.deleteBoard(boardId, author);
+        // JWT 토큰에서 현재 로그인한 사용자명 추출
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        
+        boardService.deleteBoard(boardId, currentUsername);
         
         return ResponseEntity.ok(
             ApiResponse.success("게시글 삭제 성공", null)

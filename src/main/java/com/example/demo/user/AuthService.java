@@ -1,5 +1,6 @@
 package com.example.demo.user;
 
+import com.example.demo.security.JwtTokenProvider;
 import com.example.demo.user.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class AuthService {
     
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;  // JWT 토큰 생성기 추가
     
     /**
      * 회원가입
@@ -49,7 +51,7 @@ public class AuthService {
     }
     
     /**
-     * 로그인
+     * 로그인 - JWT 토큰 발급
      */
     public LoginResponse login(LoginRequest request) {
         // 사용자 조회
@@ -61,15 +63,17 @@ public class AuthService {
             throw new BadCredentialsException("사용자명 또는 비밀번호가 올바르지 않습니다.");
         }
         
+        // JWT 토큰 생성
+        String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole().name());
+        
         log.info("로그인 성공 - 사용자명: {}", user.getUsername());
         
-        // TODO: JWT 토큰 생성 (추후 구현)
         return LoginResponse.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
-                .token(null)  // JWT 토큰 추후 구현
+                .token(token)  // JWT 토큰 포함
                 .message("로그인 성공")
                 .build();
     }

@@ -16,16 +16,17 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
     // 1. 제목으로 검색
     List<BoardEntity> findByTitleContaining(String title);
     
-    // 2. 작성자로 검색
+    // 2. 작성자로 검색 (username 기반)
     @Query("SELECT b FROM BoardEntity b WHERE b.author.username = :username")
-    List<BoardEntity> findByAuthor(@Param("username") String author);
+    List<BoardEntity> findByAuthorUsername(@Param("username") String username);
     
     // 3. 제목 또는 내용으로 검색 (페이징)
     Page<BoardEntity> findByTitleContainingOrContentContaining(
         String title, String content, Pageable pageable);
     
-    // 4. 작성자별 게시글 목록 (페이징)
-    Page<BoardEntity> findByAuthorOrderByCreatedDateDesc(String author, Pageable pageable);
+    // 4. 작성자별 게시글 목록 (페이징, username 기반)
+    @Query("SELECT b FROM BoardEntity b WHERE b.author.username = :username ORDER BY b.createdDate DESC")
+    Page<BoardEntity> findByAuthorUsernameOrderByCreatedDateDesc(@Param("username") String username, Pageable pageable);
     
     // 5. 최신 게시글 조회
     List<BoardEntity> findTop10ByOrderByCreatedDateDesc();
@@ -39,9 +40,9 @@ public interface BoardRepository extends JpaRepository<BoardEntity, Long> {
     // 8. 제목 중복 체크
     boolean existsByTitle(String title);
     
-    // 9. 작성자의 게시글 수 조회
-    @Query("SELECT COUNT(1) FROM BoardEntity b WHERE b.author.username = :username")
-    long countByAuthor(String author);
+    // 9. 작성자의 게시글 수 조회 (username 기반)
+    @Query("SELECT COUNT(b) FROM BoardEntity b WHERE b.author.username = :username")
+    long countByAuthorUsername(@Param("username") String username);
 
     // 10. 커스텀 쿼리 - 조회수 업데이트
     @Modifying
