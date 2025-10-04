@@ -33,6 +33,11 @@ dependencies {
 	// 보안
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+	
 	// 데이터베이스
 	runtimeOnly 'org.postgresql:postgresql'
 	runtimeOnly 'com.h2database:h2' // 개발/테스트용 H2 DB

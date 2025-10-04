@@ -20,7 +20,6 @@ public class BoardCreateRequest {
     @Size(max = 5000, message = "내용은 5000자 이내여야 합니다")
     private String content;
     
-    @NotBlank(message = "작성자는 필수입니다")
-    @Size(max = 50, message = "작성자명은 50자 이내여야 합니다")
+    // JWT 토큰에서 자동으로 채워지므로 필수 아님
     private String author;
 }

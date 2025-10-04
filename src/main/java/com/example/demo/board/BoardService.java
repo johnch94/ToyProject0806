@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class BoardService {
     
     private final BoardRepository boardRepository;
-    private UserService userService;
+    private final UserService userService;  // final 추가!
 
     /**
      * 게시글 전체 조회 (페이징)
@@ -83,7 +83,7 @@ public class BoardService {
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID: " + boardId));
         
         // 작성자 확인
-        if (!board.getAuthor().equals(request.getAuthor())) {
+        if (!board.getAuthor().getUsername().equals(request.getAuthor())) {
             throw new UnauthorizedAccessException("게시글 수정 권한이 없습니다.");
         }
         
@@ -103,7 +103,7 @@ public class BoardService {
                 .orElseThrow(() -> new BoardNotFoundException("게시글을 찾을 수 없습니다. ID: " + boardId));
         
         // 작성자 확인
-        if (!board.getAuthor().equals(author)) {
+        if (!board.getAuthor().getUsername().equals(author)) {
             throw new UnauthorizedAccessException("게시글 삭제 권한이 없습니다.");
         }
         
@@ -125,7 +125,7 @@ public class BoardService {
      */
     public Page<BoardResponse> getBoardsByAuthor(String author, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return boardRepository.findByAuthorOrderByCreatedDateDesc(author, pageable)
+        return boardRepository.findByAuthorUsernameOrderByCreatedDateDesc(author, pageable)
                 .map(BoardResponse::fromEntity);
     }
     
@@ -153,8 +153,8 @@ public class BoardService {
      * 작성자 통계 조회
      */
     public AuthorStatsResponse getAuthorStats(String author) {
-        long totalPosts = boardRepository.countByAuthor(author);
-        List<BoardEntity> recentPosts = boardRepository.findByAuthor(author);
+        long totalPosts = boardRepository.countByAuthorUsername(author);
+        List<BoardEntity> recentPosts = boardRepository.findByAuthorUsername(author);
         
         return AuthorStatsResponse.builder()
                 .author(author)
